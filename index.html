@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>ONYX — Strength</title>
+  <meta name="description" content="ONYX. A gym built on one rule. Scroll to feel it." />
+  <style>html{scroll-behavior:smooth;}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── RESET & BASE ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --base:    #080808;
+      --bone:    #dcdcdc;
+      --ink:     #f0f0f0;
+      --hairline: rgba(255,255,255,.12);
+      --scrim-top-h: 28vh;
+      --scrim-bot-h: 40vh;
+    }
+
+    html { scroll-behavior: auto; }
+
+    body {
+      background: var(--base);
+      color: var(--ink);
+      font-family: 'Inter Tight', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── LOADING OVERLAY ───────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--base);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px, 1.4vw, 14px);
+      letter-spacing: .25em;
+      color: rgba(220,220,220,.55);
+      text-transform: uppercase;
+      transition: opacity .9s ease, visibility .9s ease;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; }
+
+    /* ── NAV ───────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(18px, 2.8vh, 32px) clamp(24px, 4vw, 56px);
+      background: rgba(8,8,8,.95);
+      pointer-events: none;
+    }
+    nav > * { pointer-events: auto; }
+
+    .nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--bone);
+    }
+    .brand-logo-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      color: var(--bone);
+      transition: transform .3s ease;
+    }
+    .nav-brand:hover .brand-logo-icon {
+      transform: rotate(12deg) scale(1.08);
+    }
+    .nav-wordmark {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(13px, 1.5vw, 16px);
+      font-weight: 500;
+      letter-spacing: .28em;
+      color: var(--bone);
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: clamp(20px, 3vw, 44px);
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px, 1.1vw, 12px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.55);
+      text-decoration: none;
+      transition: color .25s;
+    }
+    .nav-links a.active, .nav-links a:hover { color: var(--bone); }
+
+    .nav-cta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px, 1.1vw, 12px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--bone);
+      text-decoration: none;
+      border: 1px solid rgba(220,220,220,.38);
+      border-radius: 999px;
+      padding: 9px 22px;
+      transition: border-color .25s, color .25s;
+    }
+    .nav-cta:hover {
+      border-color: var(--bone);
+      color: #fff;
+    }
+
+    /* ── STAGE (STICKY SCRUB) ──────────────────────────────────── */
+    .stage {
+      position: relative;
+      height: 700vh;
+    }
+
+    .stage-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── VIDEO ─────────────────────────────────────────────────── */
+    #film {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── VIGNETTE ──────────────────────────────────────────────── */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 220px 90px rgba(0,0,0,.85);
+      z-index: 2;
+    }
+
+    /* ── SCRIMS ────────────────────────────────────────────────── */
+    .scrim-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: var(--scrim-top-h);
+      background: linear-gradient(to bottom, rgba(0,0,0,.82) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 3;
+    }
+    .scrim-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: var(--scrim-bot-h);
+      background: linear-gradient(to top, rgba(0,0,0,.92) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ── CAPTION BEATS ─────────────────────────────────────────── */
+    .beat {
+      position: absolute;
+      left: clamp(24px, 5vw, 72px);
+      right: clamp(24px, 5vw, 72px);
+      opacity: 0;
+      transition: opacity .55s cubic-bezier(.4,0,.2,1);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .beat.on { opacity: 1; }
+
+    .beat-text {
+      font-family: 'Inter Tight', sans-serif;
+      font-weight: 500;
+      font-size: clamp(30px, 4.6vw, 64px);
+      letter-spacing: -.035em;
+      line-height: 1.06;
+      color: var(--ink);
+      text-shadow:
+        0 2px 40px rgba(0,0,0,.9),
+        0 4px 80px rgba(0,0,0,.7),
+        0 0 4px rgba(0,0,0,.95);
+    }
+
+    /* beat positions */
+    .beat-0 { top: 14%; }
+    .beat-1 { bottom: 18%; }
+    .beat-2 { bottom: 18%; }
+
+    /* ── FIXED CHROME — SCRUB RAIL ─────────────────────────────── */
+    #scrub-chrome {
+      position: fixed;
+      bottom: clamp(24px, 3.5vh, 40px);
+      left: clamp(24px, 4vw, 56px);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #scrub-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px, 1.1vw, 12px);
+      letter-spacing: .2em;
+      color: rgba(220,220,220,.5);
+      user-select: none;
+    }
+
+    #scrub-rail {
+      width: 100px;
+      height: 1px;
+      background: var(--hairline);
+      position: relative;
+      overflow: hidden;
+    }
+    #scrub-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: rgba(220,220,220,.7);
+      transition: width .05s linear;
+    }
+
+    /* ── FIXED CHROME — SPEC ROW ───────────────────────────────── */
+    #spec-row {
+      position: fixed;
+      bottom: clamp(24px, 3.5vh, 40px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px, 1vw, 11px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.38);
+      white-space: nowrap;
+      user-select: none;
+    }
+    #spec-row .spec-sep {
+      width: 1px;
+      height: 12px;
+      background: var(--hairline);
+    }
+
+    /* ── FINALE SECTION — split layout ──────────────────────── */
+    .finale {
+      min-height: 100vh;
+      background: #040404;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* animated radial glow */
+    .finale::after {
+      content: '';
+      position: absolute;
+      width: 70vw; height: 70vw;
+      max-width: 800px; max-height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(220,220,220,.04) 0%, transparent 65%);
+      top: 50%; right: -10%;
+      transform: translateY(-50%);
+      animation: finale-glow 10s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 0;
+    }
+    @keyframes finale-glow {
+      from { opacity:.5; transform:translateY(-50%) scale(1); }
+      to   { opacity:1;  transform:translateY(-55%) scale(1.1); }
+    }
+
+    /* diagonal stripe bg */
+    .finale-stripes {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -60deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,.018) 60px,
+        rgba(255,255,255,.018) 61px
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Main split body */
+    .finale-body {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 56px);
+    }
+    @media (max-width: 820px) { .finale-body { grid-template-columns: 1fr; } }
+
+    /* LEFT — info column */
+    .finale-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(80px,12vh,140px) clamp(32px,5vw,72px) clamp(48px,6vh,80px);
+      border-right: 1px solid var(--hairline);
+    }
+    @media (max-width: 820px) {
+      .finale-left { border-right: none; border-bottom: 1px solid var(--hairline); }
+    }
+
+    .finale-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.28);
+      margin-bottom: 48px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .5s ease .1s, transform .5s ease .1s;
+    }
+    .finale.in-view .finale-label { opacity: 1; transform: translateY(0); }
+
+    .finale-tagline {
+      font-size: clamp(15px,2vw,24px);
+      font-weight: 300;
+      color: rgba(220,220,220,.55);
+      line-height: 1.55;
+      letter-spacing: -.01em;
+      max-width: 28ch;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .6s ease .2s, transform .6s ease .2s;
+    }
+    .finale.in-view .finale-tagline { opacity: 1; transform: translateY(0); }
+
+    /* specs list */
+    .finale-specs {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: clamp(40px,5vh,64px);
+    }
+    .finale-spec {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      border-top: 1px solid var(--hairline);
+      opacity: 0;
+      transform: translateX(-12px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .finale-spec:last-child { border-bottom: 1px solid var(--hairline); }
+    .finale.in-view .finale-spec:nth-child(1) { opacity:1; transform:translateX(0); transition-delay:.3s; }
+    .finale.in-view .finale-spec:nth-child(2) { opacity:1; transform:translateX(0); transition-delay:.42s; }
+    .finale.in-view .finale-spec:nth-child(3) { opacity:1; transform:translateX(0); transition-delay:.54s; }
+    .finale-spec-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,1vw,11px);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.3);
+    }
+    .finale-spec-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(13px,1.5vw,17px);
+      font-weight: 500;
+      color: var(--bone);
+      letter-spacing: -.01em;
+    }
+
+    /* CTA button */
+    .finale-cta-wrap {
+      margin-top: clamp(40px,6vh,72px);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .6s ease .7s, transform .6s ease .7s;
+    }
+    .finale.in-view .finale-cta-wrap { opacity: 1; transform: translateY(0); }
+
+    .finale-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--base);
+      background: var(--bone);
+      text-decoration: none;
+      border-radius: 999px;
+      padding: clamp(14px,2vh,18px) clamp(28px,3vw,44px);
+      transition: background .25s, transform .2s, box-shadow .25s;
+      white-space: nowrap;
+    }
+    .finale-cta:hover {
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(220,220,220,.15);
+    }
+    .finale-cta-arrow { font-size: 14px; }
+
+    .finale-ghost-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,1vw,11px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.3);
+      text-decoration: none;
+      transition: color .25s;
+    }
+    .finale-ghost-link:hover { color: var(--bone); }
+
+    /* RIGHT — headline column */
+    .finale-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: clamp(80px,12vh,140px) clamp(32px,5vw,72px) clamp(48px,6vh,80px);
+      position: relative;
+    }
+
+    .finale-headline {
+      font-size: clamp(52px,9.5vw,144px);
+      font-weight: 500;
+      letter-spacing: -.05em;
+      line-height: .88;
+      color: var(--ink);
+    }
+    .finale-headline .fn-word {
+      display: block;
+      overflow: hidden;
+    }
+    .finale-headline .fn-word span {
+      display: block;
+      transform: translateY(105%);
+      transition: transform .9s cubic-bezier(.16,1,.3,1);
+    }
+    .finale-headline .fn-word:nth-child(2) span { transition-delay: .12s; }
+    .finale-headline .fn-word:nth-child(3) span { transition-delay: .24s; }
+    .finale.in-view .finale-headline .fn-word span { transform: translateY(0); }
+
+    /* animated rule below headline */
+    .finale-rule {
+      height: 1px;
+      width: 0;
+      background: linear-gradient(90deg, var(--bone), transparent);
+      margin-top: clamp(28px,4vh,44px);
+      transition: width 1s cubic-bezier(.4,0,.2,1) .55s;
+    }
+    .finale.in-view .finale-rule { width: 100%; }
+
+    .finale-year {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,1vw,11px);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.2);
+      margin-top: 20px;
+      opacity: 0;
+      transition: opacity .5s ease 1s;
+    }
+    .finale.in-view .finale-year { opacity: 1; }
+
+    /* TICKER — bottom strip */
+    .finale-ticker {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid var(--hairline);
+      overflow: hidden;
+      padding: 16px 0;
+      background: #040404;
+    }
+
+    /* ── DIVIDER ───────────────────────────────────────────────── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--hairline);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       HOME SECTIONS
+    ══════════════════════════════════════════════════════════════ */
+
+    /* ── SECTION 1: PILLARS — horizontal rule list ─────────────── */
+    .home-pillars {
+      padding: clamp(80px,11vh,130px) clamp(24px,7vw,96px);
+      border-top: 1px solid var(--hairline);
+    }
+    .home-pillars-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      margin-bottom: clamp(48px,7vh,80px);
+    }
+    .sec-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.38);
+    }
+    .home-pillars-title {
+      font-size: clamp(28px,4.2vw,56px);
+      font-weight: 500;
+      letter-spacing: -.035em;
+      color: var(--ink);
+      line-height: 1.05;
+      max-width: 18ch;
+    }
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--hairline);
+    }
+    @media (max-width: 680px) { .pillar-grid { grid-template-columns: 1fr; } }
+    .pillar-cell {
+      background: var(--base);
+      padding: clamp(28px,4.5vh,52px) clamp(24px,3vw,40px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: background .3s;
+      text-decoration: none;
+    }
+    .pillar-cell:hover { background: #0e0e0e; }
+    .pillar-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,.95vw,11px);
+      letter-spacing: .22em;
+      color: rgba(220,220,220,.28);
+    }
+    .pillar-name {
+      font-size: clamp(20px,2.6vw,34px);
+      font-weight: 500;
+      letter-spacing: -.03em;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .pillar-desc {
+      font-size: clamp(13px,1.35vw,16px);
+      font-weight: 300;
+      color: rgba(220,220,220,.48);
+      line-height: 1.62;
+      flex: 1;
+    }
+    .pillar-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: rgba(220,220,220,.28);
+      transition: color .25s, transform .25s;
+      display: inline-block;
+    }
+    .pillar-cell:hover .pillar-arrow { color: var(--bone); transform: translateX(5px); }
+
+    /* ── SECTION 2: PROOF — large counter strip ────────────────── */
+    .home-proof {
+      overflow: hidden;
+      background: #050505;
+      border-top: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .proof-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    @media (max-width: 680px) { .proof-inner { grid-template-columns: repeat(2,1fr); } }
+    .proof-stat {
+      padding: clamp(40px,6vh,70px) clamp(24px,3vw,40px);
+      border-right: 1px solid var(--hairline);
+      position: relative;
+      overflow: hidden;
+    }
+    .proof-stat:last-child { border-right: none; }
+    .proof-stat::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 120% 80% at 50% 110%, rgba(220,220,220,.04), transparent);
+      opacity: 0;
+      transition: opacity .4s;
+    }
+    .proof-stat:hover::before { opacity: 1; }
+    .proof-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(40px,6.5vw,90px);
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -.05em;
+      line-height: 1;
+      display: block;
+    }
+    .proof-unit {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,1vw,11px);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.35);
+      margin-top: 12px;
+      display: block;
+    }
+
+    /* ── SECTION 3: WHY ONYX — animated cinematic redesign ───── */
+    .home-signal {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(100px,13vh,160px) clamp(24px,7vw,96px);
+      position: relative;
+      overflow: hidden;
+      background: #060606;
+      border-top: 1px solid var(--hairline);
+    }
+
+    /* Scanline texture */
+    .home-signal::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(255,255,255,.012) 3px,
+        rgba(255,255,255,.012) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Slow ambient glow orb */
+    .signal-orb {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(220,220,220,.06) 0%, transparent 70%);
+      top: 50%;
+      left: 60%;
+      transform: translate(-50%,-50%);
+      animation: orb-drift 9s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes orb-drift {
+      from { transform: translate(-50%,-50%) scale(1); opacity: .6; }
+      to   { transform: translate(-40%,-60%) scale(1.18); opacity: 1; }
+    }
+
+    .signal-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Eyebrow with animated underline */
+    .signal-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.4);
+      margin-bottom: clamp(28px,4vh,48px);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .signal-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 0;
+      height: 1px;
+      background: var(--bone);
+      animation: line-grow 1s cubic-bezier(.4,0,.2,1) .3s forwards;
+    }
+    @keyframes line-grow { to { width: 40px; } }
+
+    /* Headline with clip-path wipe reveal */
+    .signal-headline {
+      font-size: clamp(40px,7vw,100px);
+      font-weight: 500;
+      letter-spacing: -.045em;
+      line-height: .93;
+      color: var(--ink);
+      margin-bottom: clamp(48px,7vh,80px);
+      overflow: hidden;
+    }
+    .signal-headline .hl-line {
+      display: block;
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path .9s cubic-bezier(.16,1,.3,1);
+    }
+    .signal-headline .hl-line:nth-child(2) { transition-delay: .18s; }
+    .home-signal.in-view .signal-headline .hl-line {
+      clip-path: inset(0 0% 0 0);
+    }
+
+    /* Rules — staggered slide-up */
+    .signal-rules {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--hairline);
+    }
+    @media (max-width: 820px) { .signal-rules { grid-template-columns: 1fr; } }
+
+    .signal-rule {
+      background: #060606;
+      padding: clamp(28px,4vh,44px) clamp(20px,2.5vw,36px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .7s ease, transform .7s cubic-bezier(.16,1,.3,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .signal-rule::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--bone), transparent);
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+    }
+    .home-signal.in-view .signal-rule { opacity: 1; transform: translateY(0); }
+    .home-signal.in-view .signal-rule::after { width: 100%; }
+    .home-signal.in-view .signal-rule:nth-child(1) { transition-delay: .2s; }
+    .home-signal.in-view .signal-rule:nth-child(2) { transition-delay: .38s; }
+    .home-signal.in-view .signal-rule:nth-child(3) { transition-delay: .56s; }
+    .home-signal.in-view .signal-rule:nth-child(1)::after { transition-delay: .5s; }
+    .home-signal.in-view .signal-rule:nth-child(2)::after { transition-delay: .68s; }
+    .home-signal.in-view .signal-rule:nth-child(3)::after { transition-delay: .86s; }
+
+    .signal-rule-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px,.95vw,11px);
+      letter-spacing: .22em;
+      color: rgba(220,220,220,.25);
+    }
+    .signal-rule-text {
+      font-size: clamp(14px,1.55vw,19px);
+      font-weight: 300;
+      color: rgba(220,220,220,.7);
+      line-height: 1.6;
+      letter-spacing: -.01em;
+      flex: 1;
+    }
+
+    /* CTA row */
+    .signal-cta-row {
+      margin-top: clamp(40px,5vh,64px);
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .6s ease .8s, transform .6s ease .8s;
+    }
+    .home-signal.in-view .signal-cta-row { opacity: 1; transform: translateY(0); }
+
+    .signal-cta {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--base);
+      background: var(--bone);
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 14px 34px;
+      transition: background .25s, transform .2s;
+    }
+    .signal-cta:hover { background: #fff; transform: translateY(-2px); }
+
+    .signal-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(10px,1.1vw,12px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(220,220,220,.4);
+      text-decoration: none;
+      transition: color .25s;
+    }
+    .signal-link:hover { color: var(--bone); }
+
+    /* ── RESPONSIVE ────────────────────────────────────────────── */
+    @media (max-width: 820px) {
+      .nav-links { display: none; }
+      #spec-row  { display: none; }
+    }
+    /* HAMBURGER */
+    .nav-hamburger { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: none; border: none; cursor: pointer; padding: 0; z-index: 201; pointer-events: auto; }
+    .nav-hamburger span { display: block; width: 22px; height: 1.5px; background: var(--bone); border-radius: 2px; transition: transform .3s ease, opacity .3s ease, width .3s ease; }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    @media(max-width:820px) { .nav-hamburger { display: flex; } }
+    /* MOBILE DRAWER */
+    .nav-drawer { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 199; background: rgba(8,8,8,.98); backdrop-filter: blur(12px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; transform: translateY(-100%); transition: transform .4s cubic-bezier(.4,0,.2,1); pointer-events: none; }
+    .nav-drawer.open { transform: translateY(0); pointer-events: auto; }
+    .nav-drawer a { font-family: 'JetBrains Mono', monospace; font-size: clamp(18px,5vw,28px); letter-spacing: .22em; text-transform: uppercase; color: rgba(220,220,220,.55); text-decoration: none; transition: color .25s; }
+    .nav-drawer a.active, .nav-drawer a:hover { color: var(--bone); }
+
+    /* ── REDUCED MOTION ────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .stage { height: auto; }
+      .stage-sticky { position: static; height: auto; }
+      .beat {
+        position: static;
+        opacity: 1 !important;
+        display: block;
+        margin: 32px 0;
+      }
+      #film {
+        position: static;
+        width: 100%;
+        height: auto;
+        max-height: 80vh;
+        object-fit: cover;
+      }
+      .vignette, .scrim-top, .scrim-bottom { display: none; }
+      #scrub-chrome { display: none; }
+    }
+  
+    /* ===== FOOTER ===== */
+    .page-footer{border-top:1px solid var(--hairline);padding:clamp(60px,8vh,100px) clamp(24px,7vw,96px) clamp(40px,6vh,64px);display:flex;flex-direction:column;gap:64px;background:#050505;}
+    .footer-top{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:clamp(32px,5vw,64px);align-items:start;}
+    @media(max-width:1024px){.footer-top{grid-template-columns:1fr 1fr;}}
+    @media(max-width:600px){.footer-top{grid-template-columns:1fr;}}
+    .footer-logo{font-family:"JetBrains Mono",monospace;font-size:clamp(16px,2vw,20px);font-weight:500;letter-spacing:.28em;color:var(--bone);text-decoration:none;text-transform:uppercase;display:inline-flex;align-items:center;gap:12px;margin-bottom:20px;}
+    .footer-logo .brand-logo-icon{width:24px;height:24px;}
+    .footer-desc{font-size:clamp(13px,1.3vw,15px);font-weight:300;color:rgba(220,220,220,.45);line-height:1.7;margin-bottom:32px;}
+    .footer-social-icons{display:flex;gap:16px;align-items:center;}
+    .footer-social-icons a{color:rgba(220,220,220,.45);transition:color .25s;display:flex;width:40px;height:40px;border:1px solid rgba(255,255,255,.1);border-radius:50%;align-items:center;justify-content:center;}
+    .footer-social-icons a:hover{color:var(--bone);border-color:rgba(255,255,255,.35);}
+    .footer-social-icons svg{width:16px;height:16px;fill:currentColor;}
+    .footer-col h4{font-family:"JetBrains Mono",monospace;font-size:clamp(10px,1.1vw,11px);letter-spacing:.22em;text-transform:uppercase;color:var(--ink);margin-bottom:28px;font-weight:500;}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:14px;}
+    .footer-col a{font-size:clamp(13px,1.4vw,15px);font-weight:300;color:rgba(220,220,220,.45);text-decoration:none;transition:color .25s;}
+    .footer-col a:hover{color:var(--bone);}
+    .footer-newsletter h4{font-family:"JetBrains Mono",monospace;font-size:clamp(10px,1.1vw,11px);letter-spacing:.22em;text-transform:uppercase;color:var(--ink);margin-bottom:16px;font-weight:500;}
+    .footer-newsletter p{font-size:clamp(12px,1.3vw,14px);font-weight:300;color:rgba(220,220,220,.45);line-height:1.65;margin-bottom:20px;}
+    .newsletter-form{display:flex;flex-direction:column;gap:10px;}
+    .newsletter-form input{background:#0e0e0e;border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:12px 16px;color:var(--ink);font-family:"Inter Tight",sans-serif;font-size:14px;outline:none;transition:border-color .25s;width:100%;}
+    .newsletter-form input:focus{border-color:rgba(255,255,255,.3);}
+    .newsletter-form button{background:var(--bone);color:var(--base);border:none;border-radius:4px;padding:13px 20px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:background .2s;width:100%;}
+    .newsletter-form button:hover{background:#fff;}
+    .footer-divider{height:1px;background:rgba(255,255,255,.07);}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;}
+    .footer-copy{font-family:"JetBrains Mono",monospace;font-size:clamp(9px,1vw,11px);letter-spacing:.2em;text-transform:uppercase;color:rgba(220,220,220,.25);}
+    .footer-legal{display:flex;gap:24px;list-style:none;}
+    .footer-legal a{font-family:"JetBrains Mono",monospace;font-size:clamp(9px,1vw,11px);letter-spacing:.15em;text-transform:uppercase;color:rgba(220,220,220,.2);text-decoration:none;transition:color .25s;}
+    .footer-legal a:hover{color:rgba(220,220,220,.55);}
+  </style>
+</head>
+<body>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loader">Loading</div>
+
+  <!-- NAV -->
+  <nav aria-label="Primary">
+    <a href="index.html" class="nav-brand" aria-label="ONYX home"><svg class="brand-logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2L3 7.5V16.5L12 22L21 16.5V7.5L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 2V22" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><path d="M12 12L3 7.5" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><path d="M12 12L21 7.5" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><polygon points="12,6.5 17,9.5 12,12.5 7,9.5" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.2"/></svg><span class="nav-wordmark">ONYX</span></a>
+    <ul class="nav-links" role="list">
+      <li><a href="index.html" class="active" aria-current="page">Home</a></li>
+      <li><a href="method.html">Method</a></li>
+      <li><a href="coaches.html">Coaches</a></li>
+      <li><a href="membership.html">Membership</a></li>
+      <li><a href="visit.html">Visit</a></li>
+    </ul>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <nav class="nav-drawer" id="nav-drawer" aria-label="Mobile menu">
+    <a href="index.html" class="active">Home</a>
+    <a href="method.html">Method</a>
+    <a href="coaches.html">Coaches</a>
+    <a href="membership.html">Membership</a>
+    <a href="visit.html">Visit</a>
+  </nav>
+
+  <!-- STAGE — FIRST ELEMENT, SCROLL-SCRUBBED HERO -->
+  <section class="stage" id="stage" aria-label="Cinematic scroll section">
+    <div class="stage-sticky" id="stage-sticky">
+
+      <!-- THE VIDEO — no autoplay, no loop -->
+      <video id="film" muted playsinline preload="auto" aria-label="Training footage"></video>
+
+      <!-- VIGNETTE -->
+      <div class="vignette" aria-hidden="true"></div>
+
+      <!-- SCRIMS -->
+      <div class="scrim-top"    aria-hidden="true"></div>
+      <div class="scrim-bottom" aria-hidden="true"></div>
+
+      <!-- CAPTION BEATS -->
+      <div class="beat beat-0" id="beat-0" aria-hidden="true">
+        <p class="beat-text">Before the lift.</p>
+      </div>
+
+      <div class="beat beat-1" id="beat-1" aria-hidden="true">
+        <p class="beat-text">Five in the morning.<br>Empty room.</p>
+      </div>
+
+      <div class="beat beat-2" id="beat-2" aria-hidden="true">
+        <p class="beat-text">The dust is the receipt.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FIXED CHROME — SCRUB RAIL (bottom-left) -->
+  <div id="scrub-chrome" aria-hidden="true">
+    <div id="scrub-pct">00</div>
+    <div id="scrub-rail">
+      <div id="scrub-fill"></div>
+    </div>
+  </div>
+
+  <!-- FIXED CHROME — SPEC ROW (bottom-centre) -->
+  <div id="spec-row" aria-hidden="true">
+    <span>4:45 doors open</span>
+    <span class="spec-sep"></span>
+    <span>0 mirrors</span>
+    <span class="spec-sep"></span>
+    <span>1 rule</span>
+  </div>
+
+  <!-- CLOSING SECTION -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HOME SECTION 1 — PILLARS (3-column card grid)
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="home-pillars" aria-labelledby="pillars-heading">
+    <div class="home-pillars-header">
+      <p class="sec-label">What we offer</p>
+      <h2 class="home-pillars-title" id="pillars-heading">Three doors.<br>One gym.</h2>
+    </div>
+    <div class="pillar-grid">
+
+      <a href="method.html" class="pillar-cell" aria-label="Learn about The Method">
+        <span class="pillar-num">01</span>
+        <span class="pillar-name">The Method</span>
+        <span class="pillar-desc">Compound lifts. Progressive load. No machines. A programme that has worked for eight years because it refuses to change.</span>
+        <span class="pillar-arrow">→</span>
+      </a>
+
+      <a href="coaches.html" class="pillar-cell" aria-label="Meet our Coaches">
+        <span class="pillar-num">02</span>
+        <span class="pillar-name">The Coaches</span>
+        <span class="pillar-desc">Athletes who became teachers. They train the way they teach — the same bar, the same floor, the same standard they hold you to.</span>
+        <span class="pillar-arrow">→</span>
+      </a>
+
+      <a href="membership.html" class="pillar-cell" aria-label="View Membership options">
+        <span class="pillar-num">03</span>
+        <span class="pillar-name">Membership</span>
+        <span class="pillar-desc">Two plans. No contracts. No joining fees. Foundation for those who know what they're doing. Coached for those who want a guide.</span>
+        <span class="pillar-arrow">→</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HOME SECTION 2 — PROOF (counter strip)
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="home-proof" aria-label="ONYX by the numbers">
+    <div class="proof-inner">
+      <div class="proof-stat">
+        <span class="proof-val">4:45</span>
+        <span class="proof-unit">AM — doors open</span>
+      </div>
+      <div class="proof-stat">
+        <span class="proof-val">0</span>
+        <span class="proof-unit">Mirrors on the floor</span>
+      </div>
+      <div class="proof-stat">
+        <span class="proof-val">8yr</span>
+        <span class="proof-unit">Same programme</span>
+      </div>
+      <div class="proof-stat">
+        <span class="proof-val">1</span>
+        <span class="proof-unit">Rule. Show up.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HOME SECTION 3 — SIGNAL (editorial two-column)
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="home-signal" id="why-onyx" aria-labelledby="signal-heading">
+    <div class="signal-orb" aria-hidden="true"></div>
+
+    <div class="signal-inner">
+
+      <p class="signal-eyebrow">Why ONYX</p>
+
+      <h2 class="signal-headline" id="signal-heading">
+        <span class="hl-line">Strength is</span>
+        <span class="hl-line">built in silence.</span>
+      </h2>
+
+      <div class="signal-rules" role="list">
+
+        <div class="signal-rule" role="listitem">
+          <span class="signal-rule-num">01</span>
+          <p class="signal-rule-text">Most gyms sell motivation. Motivation runs out. We sell a system — one that works at 4:45 AM when no one is watching.</p>
+        </div>
+
+        <div class="signal-rule" role="listitem">
+          <span class="signal-rule-num">02</span>
+          <p class="signal-rule-text">We removed the mirrors because mirrors train vanity. Vanity does not add kilos to your deadlift. Attention to the bar does.</p>
+        </div>
+
+        <div class="signal-rule" role="listitem">
+          <span class="signal-rule-num">03</span>
+          <p class="signal-rule-text">The chalk on your hands is the only record that matters. It does not lie, it does not post, and it does not need an audience.</p>
+        </div>
+
+      </div>
+
+      <div class="signal-cta-row">
+        <a href="visit.html" class="signal-cta">Book a trial session</a>
+        <a href="method.html" class="signal-link">Learn the method →</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- FINALE — animated split-layout closing section -->
+  <section class="finale" id="finale" aria-labelledby="finale-heading">
+
+    <!-- bg stripe texture -->
+    <div class="finale-stripes" aria-hidden="true"></div>
+
+    <!-- split body -->
+    <div class="finale-body">
+
+      <!-- LEFT column: label + tagline + specs + CTA -->
+      <div class="finale-left">
+        <div class="finale-top-block">
+          <p class="finale-label">ONYX / London — Est. 2018</p>
+          <p class="finale-tagline">The bar does not care how you feel. Come anyway.</p>
+
+          <!-- specs -->
+          <ul class="finale-specs" aria-label="Key facts">
+            <li class="finale-spec">
+              <span class="finale-spec-label">Doors open</span>
+              <span class="finale-spec-val">4:45 AM</span>
+            </li>
+            <li class="finale-spec">
+              <span class="finale-spec-label">Mirrors</span>
+              <span class="finale-spec-val">0</span>
+            </li>
+            <li class="finale-spec">
+              <span class="finale-spec-label">The rule</span>
+              <span class="finale-spec-val">Show up.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- CTA -->
+        <div class="finale-cta-wrap">
+          <a href="membership.html" class="finale-cta" id="cta-main">
+            Start training <span class="finale-cta-arrow" aria-hidden="true">→</span>
+          </a>
+          <a href="visit.html" class="finale-ghost-link">Book a trial</a>
+        </div>
+      </div>
+
+      <!-- RIGHT column: giant headline -->
+      <div class="finale-right">
+        <h2 class="finale-headline" id="finale-heading">
+          <span class="fn-word"><span>The</span></span>
+          <span class="fn-word"><span>door</span></span>
+          <span class="fn-word"><span>is open.</span></span>
+        </h2>
+        <div class="finale-rule" aria-hidden="true"></div>
+        <p class="finale-year">© ONYX 2026 — All rights reserved</p>
+      </div>
+
+    </div><!-- /finale-body -->
+
+  </section>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const film     = document.getElementById('film');
+      const stage    = document.getElementById('stage');
+      const loader   = document.getElementById('loader');
+      const scrubPct  = document.getElementById('scrub-pct');
+      const scrubFill = document.getElementById('scrub-fill');
+      const beats = [
+        document.getElementById('beat-0'),
+        document.getElementById('beat-1'),
+        document.getElementById('beat-2'),
+      ];
+
+      const BEAT_WINDOWS = [
+        { start: 0.00, end: 0.14 },
+        { start: 0.24, end: 0.38 },
+        { start: 0.72, end: 0.88 },
+      ];
+
+      let targetProgress  = 0;
+      let currentProgress = 0;
+      let rafId           = null;
+      let videoReady      = false;
+      let lastWrittenTime = -1;
+
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+      function getProgress () {
+        const rect        = stage.getBoundingClientRect();
+        const stageHeight = stage.offsetHeight;
+        const winH        = window.innerHeight;
+        return clamp(-rect.top / (stageHeight - winH), 0, 1);
+      }
+
+      function updateBeats (p) {
+        BEAT_WINDOWS.forEach(function (win, i) {
+          const active = p >= win.start && p <= win.end;
+          beats[i].classList.toggle('on', active);
+          beats[i].setAttribute('aria-hidden', String(!active));
+        });
+      }
+
+      function tick () {
+        rafId = requestAnimationFrame(tick);
+
+        targetProgress   = getProgress();
+        currentProgress += (targetProgress - currentProgress) * 0.12;
+
+        const pctInt = Math.round(currentProgress * 100);
+        scrubFill.style.width = pctInt + '%';
+        scrubPct.textContent  = String(pctInt).padStart(2, '0');
+
+        if (videoReady && film.duration) {
+          const desiredTime = currentProgress * (film.duration - 0.05);
+          if (Math.abs(desiredTime - lastWrittenTime) > 0.005) {
+            film.currentTime = desiredTime;
+            lastWrittenTime  = desiredTime;
+          }
+        }
+
+        updateBeats(currentProgress);
+      }
+
+      const VIDEO_URL = 'https://zxdefgavgwfxastwmmjm.supabase.co/storage/v1/object/public/assets/chalk.mp4';
+
+      function startScrub () {
+        film.currentTime = 0;
+        lastWrittenTime  = 0;
+        videoReady       = true;
+        loader.classList.add('hidden');
+        if (!prefersReduced) {
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      film.addEventListener('loadeddata', function onLoaded () {
+        film.removeEventListener('loadeddata', onLoaded);
+        startScrub();
+      }, { once: true });
+
+      film.addEventListener('canplay', function onCan () {
+        film.removeEventListener('canplay', onCan);
+        if (!videoReady) startScrub();
+      }, { once: true });
+
+      fetch(VIDEO_URL)
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.blob();
+        })
+        .then(function (blob) {
+          film.src = URL.createObjectURL(blob);
+          film.load();
+        })
+        .catch(function (err) {
+          console.warn('Blob fetch failed, falling back to direct src:', err);
+          film.src = VIDEO_URL;
+          film.load();
+        });
+
+      if (prefersReduced) {
+        beats.forEach(function (b) {
+          b.classList.add('on');
+          b.setAttribute('aria-hidden', 'false');
+        });
+        film.controls = true;
+        loader.classList.add('hidden');
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden && rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        } else if (!document.hidden && !rafId && !prefersReduced && videoReady) {
+          rafId = requestAnimationFrame(tick);
+        }
+      });
+
+    })();
+  </script>
+
+  <!-- WHY ONYX — IntersectionObserver animation trigger -->
+  <script>
+    (function () {
+      var section = document.getElementById('why-onyx');
+      if (!section) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        section.classList.add('in-view');
+        return;
+      }
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.18 });
+      observer.observe(section);
+    })();
+  </script>
+
+  <!-- FINALE — IntersectionObserver animation trigger -->
+  <script>
+    (function () {
+      var finale = document.getElementById('finale');
+      if (!finale) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finale.classList.add('in-view');
+        return;
+      }
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            finale.classList.add('in-view');
+            obs.unobserve(finale);
+          }
+        });
+      }, { threshold: 0.15 });
+      obs.observe(finale);
+    })();
+  </script>
+
+  <footer class="page-footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo" aria-label="ONYX home"><svg class="brand-logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2L3 7.5V16.5L12 22L21 16.5V7.5L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 2V22" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><path d="M12 12L3 7.5" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><path d="M12 12L21 7.5" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.5"/><polygon points="12,6.5 17,9.5 12,12.5 7,9.5" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.2"/></svg><span>ONYX</span></a>
+        <p class="footer-desc">A premium strength and conditioning facility in London's Warehouse District. We train athletes, not egos.</p>
+        <div class="footer-social-icons">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a href="#" aria-label="Twitter / X"><svg viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="method.html">Method</a></li>
+          <li><a href="coaches.html">Coaches</a></li>
+          <li><a href="membership.html">Membership</a></li>
+          <li><a href="visit.html">Visit</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="visit.html">Location &amp; Hours</a></li>
+          <li><a href="visit.html#trial">Book a Trial</a></li>
+          <li><a href="mailto:info@onyxstrength.com">info@onyxstrength.com</a></li>
+          <li><a href="tel:+442071234567">+44 207 123 4567</a></li>
+        </ul>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>Get updates on schedules, new equipment, and member events. No spam, ever.</p>
+        <form class="newsletter-form" action="#" method="post">
+          <input type="email" placeholder="Your email address" aria-label="Email address" required>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-bottom">
+      <span class="footer-copy">&copy; 2026 ONYX STRENGTH &mdash; London</span>
+      <ul class="footer-legal">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="#">Cookies</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      var btn = document.getElementById('nav-hamburger');
+      var drawer = document.getElementById('nav-drawer');
+      if (!btn || !drawer) return;
+      btn.addEventListener('click', function() {
+        var isOpen = drawer.classList.toggle('open');
+        btn.classList.toggle('open', isOpen);
+        btn.setAttribute('aria-expanded', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+      // Close drawer on link click
+      drawer.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          drawer.classList.remove('open');
+          btn.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
+
+
+
